@@ -1,6 +1,8 @@
 // module schema
 
+use crate::log::logging::*;
 use serde::{Deserialize, Serialize};
+use std::error::Error;
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct CustomerDetails {
@@ -18,4 +20,11 @@ pub struct CustomerDetails {
 
     #[serde(rename = "mobile")]
     pub mobile: String,
+}
+
+pub struct ImplMessageQueueInterface {}
+
+pub trait MessageQueueInterface {
+    // used to interact with container registry (manifest calls)
+    fn subscribe(&self, log: &Logging, host: String, topic: String) -> Result<(), Box<dyn Error>>;
 }
