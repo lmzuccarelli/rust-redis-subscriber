@@ -36,6 +36,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             host: String,
             topic: String,
         ) -> Result<(), Box<dyn Error>> {
+            log.trace(&format!("host {}", &host));
             let client = redis::Client::open(host).unwrap();
             let mut con = client.get_connection().unwrap();
             log.debug(&format!("subscribing to topic {:?}", topic));
