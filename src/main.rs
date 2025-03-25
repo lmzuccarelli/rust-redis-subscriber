@@ -1,19 +1,13 @@
-use redis::{ControlFlow, PubSubCommands};
+use crate::handlers::subscriber::{handler, ImplMessageQueueInterface};
+use custom_logger::*;
 use signal_hook::{consts::SIGINT, iterator::Signals};
 use std::env;
-use std::error::Error;
 use std::process;
 use std::thread;
 
 // define local modules
 mod api;
 mod handlers;
-mod log;
-
-// use local modules
-use api::schema::*;
-use handlers::subscriber::*;
-use log::logging::*;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -29,35 +23,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     };
 
     let log = Logging { log_level: lvl };
-    impl MessageQueueInterface for ImplMessageQueueInterface {
-        fn subscribe(
-            &self,
-            log: &Logging,
-            host: String,
-            topic: String,
-        ) -> Result<(), Box<dyn Error>> {
-            log.trace(&format!("host {}", &host));
-            let client = redis::Client::open(host).unwrap();
-            let mut con = client.get_connection().unwrap();
-            log.debug(&format!("subscribing to topic {:?}", topic));
-            let _: () = con
-                .subscribe(&[topic], |msg| {
-                    // the string received has to cleaned up
-                    // replace all \\ with blank
-                    // replace first and last occurance of \" with blank
-                    let received: String = msg.get_payload().unwrap();
-                    let s = received.replacen("\"", "", 1).replace("\\", "");
-                    let clean = s.strip_suffix("\"").unwrap();
-                    log.debug(&format!("clean {:#?}", &clean));
-                    let obj: CustomerDetails = serde_json::from_str(&clean).unwrap();
-                    log.info(&format!("payload {:#?}", obj));
-                    return ControlFlow::Continue;
-                })
-                .unwrap();
-            Ok(())
-        }
-    }
-
     let impl_q = ImplMessageQueueInterface {};
     if let Err(error) = handler(impl_q, &log) {
         log.error(&format!("{:?}", error));

@@ -6,10 +6,10 @@ LEVEL ?= "info"
 TEST ?= ""
 
 build: 
-	cargo build
-
-build-release:
 	cargo build --release
+
+build-dev:
+	cargo build
 
 test: clean
 	CARGO_INCREMENTAL=0 RUSTFLAGS='-Cinstrument-coverage' LLVM_PROFILE_FILE='cargo-test-%p-%m.profraw' cargo test  -- --nocapture
@@ -27,3 +27,6 @@ run:
 
 clean:
 	rm -rf cargo-test*
+
+clean-all: clean
+	cargo clean
